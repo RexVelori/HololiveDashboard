@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VTuber Stream Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .add-btn:hover {
+            background: #45a049;
+        }
+
+        .toggle-btn {
+            background: #2196F3;
+            color: white;
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+
+        .toggle-btn:hover {
+            background: #1976D2;
+        }
+
+        .toggle-btn.inactive {
+            background: #757575;
+        }
+
+        .toggle-btn.inactive:hover {
+            background: #616161;
+        }
+
+        .channel-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .channel-tag {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .channel-tag.inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .channels-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .channel-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .channel-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .channel-name {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .video-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4CAF50;
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            cursor: pointer;
+        }
+
+        .video-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .video-thumbnail {
+            width: 120px;
+            height: 68px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .video-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .video-title {
+            color: white;
+            font-weight: bold;
+            margin-bottom: 5px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .loading, .empty-state {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 40px;
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #ffcdd2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .hololive-section {
+            margin-top: 20px;
+        }
+
+        .generation-group {
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .generation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .generation-header h4 {
+            color: white;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .member-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .member-buttons button {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .member-buttons button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .member-buttons button.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🎬 VTuber Stream Dashboard</h1>
+            <p>Track the latest videos from your favorite VTubers</p>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <input type="text" id="channelInput" placeholder="Enter YouTube Channel ID (e.g., UCoSrY_IQQVpmIRZ9Xf-y93g)">
+                <button class="add-btn" onclick="addChannel()">Add Channel</button>
+            </div>
+
+            <div class="hololive-section">
+                <h3 style="color: white; margin-bottom: 15px;">Hololive EN</h3>
+                
+                <div class="generation-group">
+                    <div class="generation-header">
+                        <h4>Myth</h4>
+                        <button class="toggle-btn" onclick="toggleGeneration('myth')">Show All</button>
+                    </div>
+                    <div class="member-buttons" id="myth-members">
+                        <button onclick="toggleMember('UCL_qhgtOy0dy1Agp8vkySQg', 'Mori Calliope Ch.')">Mori Calliope</button>
+                        <button onclick="toggleMember('UCoSrY_IQQVpmIRZ9Xf-y93g', 'Gawr Gura Ch.')">Gawr Gura</button>
+                        <button onclick="toggleMember('UCMwGHR0BTZuLsmjY_NT5Pwg', 'Ninomae Ina\'nis Ch.')">Ninomae Ina'nis</button>
+                        <button onclick="toggleMember('UCHsx4Hqa-1ORjQTh9TYDhww', 'Takanashi Kiara Ch.')">Takanashi Kiara</button>
+                        <button onclick="toggleMember('UCyl1z3jo3XHR1riLFKG5UAg', 'Watson Amelia Ch.')">Watson Amelia</button>
+                    </div>
+                </div>
+
+                <div class="generation-group">
+                    <div class="generation-header">
+                        <h4>Promise</h4>
+                        <button class="toggle-btn" onclick="toggleGeneration('promise')">Show All</button>
+                    </div>
+                    <div class="member-buttons" id="promise-members">
+                        <button onclick="toggleMember('UCO_aKKYxn4tvrqPjcTzZ6EQ', 'Ceres Fauna Ch.')">Ceres Fauna</button>
+                        <button onclick="toggleMember('UCotXwY6s8pWmuWd_snKYjhg', 'Ouro Kronii Ch.')">Ouro Kronii</button>
+                        <button onclick="toggleMember('UCmbs8T6MWqUHP1tIQvSgKrg', 'Nanashi Mumei Ch.')">Nanashi Mumei</button>
+                        <button onclick="toggleMember('UC8rcEBzJSleTkf_-agPM20g', 'Hakos Baelz Ch.')">Hakos Baelz</button>
+                        <button onclick="toggleMember('UC8rcEBzJSleTkf_-agPM20g', 'IRyS Ch.')">IRyS</button>
+                    </div>
+                </div>
+
+                <div class="generation-group">
+                    <div class="generation-header">
+                        <h4>Advent</h4>
+                        <button class="toggle-btn" onclick="toggleGeneration('advent')">Show All</button>
+                    </div>
+                    <div class="member-buttons" id="advent-members">
+                        <button onclick="toggleMember('UCgnfPPb9JI3e9A4cXHnWbyg', 'Shiori Novella Ch.')">Shiori Novella</button>
+                        <button onclick="toggleMember('UCgnfPPb9JI3e9A4cXHnWbyg', 'Koseki Bijou Ch.')">Koseki Bijou</button>
+                        <button onclick="toggleMember('UCgnfPPb9JI3e9A4cXHnWbyg', 'Nerissa Ravencroft Ch.')">Nerissa Ravencroft</button>
+                        <button onclick="toggleMember('UCgnfPPb9JI3e9A4cXHnWbyg', 'FUWAMOCO Ch.')">FUWAMOCO</button>
+                    </div>
+                </div>
+
+                <div class="generation-group">
+                    <div class="generation-header">
+                        <h4>Justice</h4>
+                        <button class="toggle-btn" onclick="toggleGeneration('justice')">Show All</button>
+                    </div>
+                    <div class="member-buttons" id="justice-members">
+                        <button onclick="toggleMember('UCW5uhrG1eCBYditmhL0Ykjw', 'Elizabeth Rose Bloodflame Ch.')">Elizabeth Rose Bloodflame</button>
+                        <button onclick="toggleMember('UCDHABijvPBnJm7F-KlNME3w', 'Gigi Murin Ch.')">Gigi Murin</button>
+                        <button onclick="toggleMember('UC7MMNHR-kf9EN1rXiesMTMw', 'Cecilia Immergreen Ch.')">Cecilia Immergreen</button>
+                        <button onclick="toggleMember('UCl69AEx4MdqMZH7Jtsm7Tig', 'Raora Panthera Ch.')">Raora Panthera</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="channel-list" id="channelList">
+                <!-- Channel tags will appear here -->
+            </div>
+        </div>
+
+        <div id="channelsContainer" class="channels-container">
+            <div class="empty-state">
+                <h3>No channels added yet</h3>
+                <p>Add some VTuber channels to start tracking their latest videos!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let channels = [];
+        let channelData = {};
+
+        // Hololive member data with corrected channel IDs
+        const hololiveMembers = {
+            // Myth
+            'UCL_qhgtOy0dy1Agp8vkySQg': 'Mori Calliope Ch.',
+            'UCoSrY_IQQVpmIRZ9Xf-y93g': 'Gawr Gura Ch.',
+            'UCMwGHR0BTZuLsmjY_NT5Pwg': 'Ninomae Ina\'nis Ch.',
+            'UCHsx4Hqa-1ORjQTh9TYDhww': 'Takanashi Kiara Ch.',
+            'UCyl1z3jo3XHR1riLFKG5UAg': 'Watson Amelia Ch.',
+            // Promise
+            'UCO_aKKYxn4tvrqPjcTzZ6EQ': 'Ceres Fauna Ch.',
+            'UCotXwY6s8pWmuWd_snKYjhg': 'Ouro Kronii Ch.',
+            'UCmbs8T6MWqUHP1tIQvSgKrg': 'Nanashi Mumei Ch.',
+            'UC8rcEBzJSleTkf_-agPM20g': 'Hakos Baelz Ch.',
+            'UC8rcEBzJSleTkf_-agPM20g': 'IRyS Ch.',
+            // Advent
+            'UCgnfPPb9JI3e9A4cXHnWbyg': 'Shiori Novella Ch.',
+            'UC0TXe_LYZ4scaW2XMyi5_kw': 'Koseki Bijou Ch.',
+            'UC_sFNM0z0MWm9A6WlKPuMMg': 'Nerissa Ravencroft Ch.',
+            'UCt9H_RpQzhxzlyBxFqrdHqA': 'FUWAMOCO Ch.',
+            // Justice
+            'UCW5uhrG1eCBYditmhL0Ykjw': 'Elizabeth Rose Bloodflame Ch.',
+            'UCDHABijvPBnJm7F-KlNME3w': 'Gigi Murin Ch.',
+            'UC7MMNHR-kf9EN1rXiesMTMw': 'Cecilia Immergreen Ch.',
+            'UCl69AEx4MdqMZH7Jtsm7Tig': 'Raora Panthera Ch.'
+        };
+
+        const generations = {
+            'myth': ['UCL_qhgtOy0dy1Agp8vkySQg', 'UCoSrY_IQQVpmIRZ9Xf-y93g', 'UCMwGHR0BTZuLsmjY_NT5Pwg', 'UCHsx4Hqa-1ORjQTh9TYDhww', 'UCyl1z3jo3XHR1riLFKG5UAg'],
+            'promise': ['UCO_aKKYxn4tvrqPjcTzZ6EQ', 'UCotXwY6s8pWmuWd_snKYjhg', 'UCmbs8T6MWqUHP1tIQvSgKrg', 'UC8rcEBzJSleTkf_-agPM20g', 'UC8rcEBzJSleTkf_-agPM20g'],
+            'advent': ['UCgnfPPb9JI3e9A4cXHnWbyg', 'UC0TXe_LYZ4scaW2XMyi5_kw', 'UC_sFNM0z0MWm9A6WlKPuMMg', 'UCt9H_RpQzhxzlyBxFqrdHqA'],
+            'justice': ['UCW5uhrG1eCBYditmhL0Ykjw', 'UCDHABijvPBnJm7F-KlNME3w', 'UC7MMNHR-kf9EN1rXiesMTMw', 'UCl69AEx4MdqMZH7Jtsm7Tig']
+        };
+
+        function resolveChannelId(input) {
+            // If it already looks like a channel ID, return as-is
+            if (input.match(/^UC[a-zA-Z0-9_-]{22}$/)) {
+                return input;
+            }
+
+            throw new Error('Please enter a valid YouTube Channel ID (starts with UC and is 24 characters long)');
+        }
+
+        function addChannel() {
+            const input = document.getElementById('channelInput');
+            const channelInput = input.value.trim();
+            
+            if (!channelInput) return;
+
+            try {
+                const channelId = resolveChannelId(channelInput);
+
+                if (!channels.find(ch => ch.id === channelId)) {
+                    channels.push({ 
+                        id: channelId, 
+                        name: channelInput, 
+                        active: true 
+                    });
+                    updateChannelList();
+                    fetchChannelData(channelId);
+                    updateMemberButtons();
+                }
+
+                input.value = '';
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function toggleMember(channelId, memberName) {
+            const existingChannel = channels.find(ch => ch.id === channelId);
+            
+            if (existingChannel) {
+                existingChannel.active = !existingChannel.active;
+            } else {
+                channels.push({ 
+                    id: channelId, 
+                    name: memberName, 
+                    active: true 
+                });
+                fetchChannelData(channelId);
+            }
+            
+            updateChannelList();
+            updateMemberButtons();
+            renderChannels();
+        }
+
+        function toggleGeneration(generationName) {
+            const genChannels = generations[generationName];
+            const button = event.target;
+            
+            // Check if any member is currently inactive
+            const hasInactive = genChannels.some(channelId => {
+                const channel = channels.find(ch => ch.id === channelId);
+                return !channel || !channel.active;
+            });
+            
+            if (hasInactive) {
+                // Activate all members
+                genChannels.forEach(channelId => {
+                    const existingChannel = channels.find(ch => ch.id === channelId);
+                    if (existingChannel) {
+                        existingChannel.active = true;
+                    } else {
+                        channels.push({ 
+                            id: channelId, 
+                            name: hololiveMembers[channelId], 
+                            active: true 
+                        });
+                        fetchChannelData(channelId);
+                    }
+                });
+                button.textContent = 'Hide All';
+            } else {
+                // Deactivate all members
+                genChannels.forEach(channelId => {
+                    const channel = channels.find(ch => ch.id === channelId);
+                    if (channel) {
+                        channel.active = false;
+                    }
+                });
+                button.textContent = 'Show All';
+            }
+            
+            updateChannelList();
+            updateMemberButtons();
+            renderChannels();
+        }
+
+        function updateMemberButtons() {
+            // Update all member button states
+            Object.entries(generations).forEach(([genName, channelIds]) => {
+                const container = document.getElementById(`${genName}-members`);
+                const buttons = container.querySelectorAll('button');
+                
+                buttons.forEach((button, index) => {
+                    const channelId = channelIds[index];
+                    const channel = channels.find(ch => ch.id === channelId);
+                    
+                    if (channel && channel.active) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+                
+                // Update generation toggle button
+                const genButton = document.querySelector(`[onclick="toggleGeneration('${genName}')"]`);
+                const activeCount = channelIds.filter(channelId => {
+                    const channel = channels.find(ch => ch.id === channelId);
+                    return channel && channel.active;
+                }).length;
+                
+                if (activeCount === channelIds.length) {
+                    genButton.textContent = 'Hide All';
+                } else if (activeCount === 0) {
+                    genButton.textContent = 'Show All';
+                } else {
+                    genButton.textContent = `Show All (${activeCount}/${channelIds.length})`;
+                }
+            });
+        }
+
+        function toggleChannel(channelId) {
+            const channel = channels.find(ch => ch.id === channelId);
+            if (channel) {
+                channel.active = !channel.active;
+                updateChannelList();
+                renderChannels();
+            }
+        }
+
+        function updateChannelList() {
+            const channelList = document.getElementById('channelList');
+            
+            if (channels.length === 0) {
+                channelList.innerHTML = '<p style="color: rgba(255,255,255,0.7);">Add channels using the input above</p>';
+                return;
+            }
+
+            channelList.innerHTML = channels.map(channel => `
+                <div class="channel-tag ${channel.active ? '' : 'inactive'}">
+                    ${channel.name}
+                    <button class="toggle-btn ${channel.active ? '' : 'inactive'}" 
+                            onclick="toggleChannel('${channel.id}')" 
+                            title="${channel.active ? 'Hide' : 'Show'} this channel">
+                        ${channel.active ? '👁️' : '👁️‍🗨️'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function fetchChannelData(channelId) {
+            try {
+                channelData[channelId] = { loading: true, error: null };
+                renderChannels();
+
+                const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch RSS feed. CORS restrictions may be blocking the request.');
+                }
+
+                const xmlContent = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+
+                const parserError = xmlDoc.querySelector('parsererror');
+                if (parserError) {
+                    throw new Error('Invalid RSS feed format');
+                }
+
+                const channelTitle = xmlDoc.querySelector('feed > title')?.textContent || `Channel ${channelId}`;
+                const entries = xmlDoc.querySelectorAll('entry');
+                
+                const videos = Array.from(entries).slice(0, 8).map(entry => {
+                    const title = entry.querySelector('title')?.textContent || 'No title';
+                    const published = entry.querySelector('published')?.textContent || '';
+                    const videoId = entry.querySelector('videoId')?.textContent || '';
+                    const link = entry.querySelector('link')?.getAttribute('href') || '';
+                    const thumbnail = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                    
+                    return {
+                        title,
+                        publishedAt: published,
+                        videoId,
+                        link,
+                        thumbnail
+                    };
+                });
+
+                channelData[channelId] = {
+                    name: channelTitle,
+                    videos,
+                    loading: false,
+                    error: null
+                };
+
+                // Update channel name
+                const channel = channels.find(ch => ch.id === channelId);
+                if (channel) {
+                    channel.name = channelTitle;
+                    updateChannelList();
+                    updateMemberButtons();
+                }
+
+            } catch (error) {
+                console.error('Error fetching channel data:', error);
+                channelData[channelId] = {
+                    name: `Channel ${channelId}`,
+                    videos: [],
+                    loading: false,
+                    error: error.message
+                };
+            }
+
+            renderChannels();
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            return date.toLocaleDateString();
+        }
+
+        function openVideo(link) {
+            window.open(link, '_blank');
+        }
+
+        function renderChannels() {
+            const container = document.getElementById('channelsContainer');
+            const activeChannels = channels.filter(ch => ch.active);
+            
+            if (activeChannels.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>${channels.length === 0 ? 'No channels added yet' : 'No active channels'}</h3>
+                        <p>${channels.length === 0 ? 'Add some VTuber channels to start tracking!' : 'Toggle some channels to show their videos'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = activeChannels.map(channel => {
+                const data = channelData[channel.id];
+                
+                if (!data || data.loading) {
+                    return `
+                        <div class="channel-card">
+                            <div class="channel-header">
+                                <div class="channel-name">${channel.name}</div>
+                            </div>
+                            <div class="loading">Loading videos...</div>
+                        </div>
+                    `;
+                }
+
+                if (data.error) {
+                    return `
+                        <div class="channel-card">
+                            <div class="channel-header">
+                                <div class="channel-name">${data.name}</div>
+                            </div>
+                            <div class="error">${data.error}</div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="channel-card">
+                        <div class="channel-header">
+                            <div class="channel-name">${data.name}</div>
+                        </div>
+                        ${data.videos.map(video => `
+                            <div class="video-item" onclick="openVideo('${video.link}')">
+                                <img src="${video.thumbnail}" 
+                                     alt="Video thumbnail" 
+                                     class="video-thumbnail"
+                                     onerror="this.style.display='none'">
+                                <div class="video-content">
+                                    <div class="video-title">${video.title}</div>
+                                    <div class="video-meta">${formatDate(video.publishedAt)}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Event listeners
+        document.getElementById('channelInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addChannel();
+            }
+        });
+
+        // Initialize
+        updateChannelList();
+        updateMemberButtons();
+    </script>
+</body>
+</html>

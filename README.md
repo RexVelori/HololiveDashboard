@@ -1,9 +1,7 @@
 # 🎬 VTuber Stream Dashboard
 
-The **VTuber Stream Dashboard** is a web app that allows you to track
-the latest videos from your favorite VTubers.\
-It features an interactive interface for adding YouTube channels
-manually, or quickly enabling Hololive EN members by generation.
+The **VTuber Stream Dashboard** is a lightweight web app to track the latest uploads from your favorite VTubers.  
+It comes preloaded with Hololive EN generations and also supports adding indie channels directly in the config.
 
 🔗 **Live Demo:** <https://rexvelori.github.io/HololiveDashboard/>
 
@@ -11,30 +9,52 @@ manually, or quickly enabling Hololive EN members by generation.
 
 ## ✨ Features
 
--   Add YouTube channels by channel ID\
--   Toggle visibility of channels dynamically\
--   Preloaded Hololive EN generations (Myth, Promise, Advent, Justice)\
--   Displays latest 8 videos per channel\
--   Video thumbnails, titles, and publish dates\
+-   Preloaded Hololive EN generations (Myth, Promise, Advent, Justice, Indie)
+-   Toggle visibility of channels dynamically (per member or per generation)
+-   Displays recent videos per channel (pulled from YouTube’s RSS feeds)
+-   Shorts (`/shorts/…`) are automatically ignored
+-   Video thumbnails, titles, and publish dates
 -   Responsive, modern design with gradient background
+-   No dependencies — built with **vanilla HTML, CSS, and JavaScript**
 
 ------------------------------------------------------------------------
 
 ## 🚀 How to Use
 
-1.  Visit the live demo link above.\
-2.  Enter a YouTube channel ID (starts with `UC...`).\
-3.  Or, click on a Hololive EN member button to add them.\
-4.  Toggle channels and generations to show/hide their videos.\
+1.  Open the `index.html` file in any modern browser, or visit the live demo link above.  
+2.  Click on a Hololive EN generation or individual member to activate them.  
+3.  The latest videos for that member/channel will appear in the dashboard.  
+4.  Toggle members or generations again to hide them.  
 5.  Click on a video thumbnail to watch it directly on YouTube.
+
+------------------------------------------------------------------------
+
+## ⚙️ Configuration
+
+Channels are defined in the `CONFIG` object near the top of `index.html`.  
+To add your own indie channels, simply add them under a `group` in the config:
+
+```js
+{
+  key: 'indie',
+  label: 'Indie',
+  members: [
+    { id: 'UCxxxxxx', name: 'MyIndieVTuber' }
+  ]
+}
+```
+
+You can also set `defaultActive: true` if you want all channels to load automatically on page load.
 
 ------------------------------------------------------------------------
 
 ## 🛠️ Development
 
--   Built with **HTML, CSS, and JavaScript (vanilla)**\
--   Fetches video data via YouTube's public **RSS feeds**\
--   Uses **CORS proxy** to bypass fetch restrictions
+-   Built with **HTML, CSS, and JavaScript (vanilla)**  
+-   Fetches video data via YouTube's public **RSS feeds**  
+-   Uses **CORS proxy** to bypass fetch restrictions  
+
+Note: YouTube’s RSS feeds only return the most recent ~15 videos per channel.
 
 ------------------------------------------------------------------------
 
